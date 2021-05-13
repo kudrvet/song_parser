@@ -1,0 +1,10 @@
+{
+    "name": "vagrant/parser",
+    "authors": [
+        {
+            "name": "kudrvet",
+            "email": "kudrvet@gmail.com"
+        }
+    ],
+    "require": {}
+}

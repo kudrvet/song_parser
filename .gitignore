@@ -1,0 +1,7 @@
+ansible/
+.vagrant
+ubuntu-bionic-18.04-cloudimg-console.log
+Vagrantfile
+vagrant_env.sh
+.idea
+.DS_Store
