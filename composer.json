@@ -11,6 +11,9 @@
             "App\\": "src"
         }
     },
+    "bin": [
+        "bin/loadArtistAndSongsInfo"
+    ],
     "require": {
         "illuminate/database": "*",
         "guzzlehttp/guzzle": "^6.5",
