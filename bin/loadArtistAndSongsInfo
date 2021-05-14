@@ -1,0 +1,36 @@
+#!/usr/bin/env php
+<?php
+use App\App;
+
+$autoloadPath1 = __DIR__ . '/../../../autoload.php';
+$autoloadPath2 = __DIR__ . '/../vendor/autoload.php';
+
+if (file_exists($autoloadPath1)) {
+    require_once $autoloadPath1;
+} else {
+    require_once $autoloadPath2;
+}
+
+$doc = <<<DOC
+Load artist information and songs library from soundcloud.com to database.
+
+Usage:
+  loadArtistLibrary (-h|--help)
+  loadArtistLibrary (-v|--version)
+  loadArtistLibrary  <profileUrl>
+
+Options:
+  -h --help                     Show this screen
+  -v --version                  Show version
+  <profileUrl>                  artist profile url on https://soundcloud.com/
+
+DOC;
+$args = Docopt::handle($doc, array('version'=>'loadArtistLibrary beta'));
+$profileUrl = $args->args['<profileUrl>'];
+
+App::createDbConnection();
+App::loadArtistAndSongsInfo($profileUrl);
+echo 'artist library loaded is ';
+return 0;
+
+

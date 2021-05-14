@@ -5,3 +5,4 @@ Vagrantfile
 vagrant_env.sh
 .idea
 .DS_Store
+vendor/
