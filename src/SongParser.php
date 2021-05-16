@@ -126,6 +126,13 @@ class SongParser
         return self::$params;
     }
 
+    public static function getDefaultParams()
+    {
+        return self::$defaultParams;
+    }
+
+
+
 }
 
 

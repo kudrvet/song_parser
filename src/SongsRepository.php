@@ -2,10 +2,7 @@
 
 namespace App;
 
-use GuzzleHttp;
-use function PHPUnit\Framework\throwException;
 use Illuminate\Database\Capsule\Manager as Capsule;
-
 
 class SongsRepository
 {
@@ -13,7 +10,6 @@ class SongsRepository
     {
         if (!Capsule::schema()->hasTable('media_tracks')) {
             Capsule::schema()->create('media_tracks', function ($table) {
-//                $table->increments('track_id');
                 $table->string('artist_id');
                 $table->string('title');
                 $table->integer('reposts_count');
