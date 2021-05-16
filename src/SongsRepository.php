@@ -25,6 +25,6 @@ class SongsRepository
     public static function save($data)
     {
         self::init();
-        Capsule::table('media_tracks')->upsert($data, ['artist_id','title'], ['reposts_count']);
+        Capsule::table('media_tracks')->upsert($data, ['artist_id','title'], ['reposts_count','updated_at']);
     }
 }

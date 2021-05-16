@@ -42,12 +42,18 @@ class App
         if (is_null($fullArtistData)) {
             throw new \Exception('soundcloud api has been changed. This program does not work anymore :(');
         }
-        $artistData = collect($fullArtistData)->only(['username', 'first_name', 'full_name', 'followers_count'])->all();
+        $now = date('Y-m-d H:i:s');
+
+        $artistData = collect($fullArtistData)
+            ->only(['username', 'first_name', 'full_name', 'followers_count'])
+            ->union(['created_at' => $now, 'updated_at' => $now])
+            ->all();
         $artistId = ArtistRepository::saveAndGetId($artistData);
 
         $songsData = collect($fullSongsData)
-            ->map(fn($songData) => collect($songData)->only(['reposts_count', 'title', 'track_format', 'genre', 'duration'])
-                ->union(['artist_id' => $artistId])
+            ->map(fn($songData) => collect($songData)
+                ->only(['reposts_count', 'title', 'track_format', 'genre', 'duration'])
+                ->union(['artist_id' => $artistId, 'created_at' => $now, 'updated_at' => $now])
                 ->all()
             )
             ->all();

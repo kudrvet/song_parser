@@ -28,7 +28,7 @@ class ArtistRepository
     public static function saveAndGetId($data)
     {
        self::init();
-       Capsule::table('media_artists')->upsert($data, ['username'], ['followers_count', 'first_name', 'full_name','created_at','updated_at']);
+       Capsule::table('media_artists')->upsert($data, ['username'], ['followers_count', 'first_name', 'full_name','updated_at']);
        return Capsule::table('media_artists')->select('artist_id')->where(['username' => $data['username']])->first()->artist_id;
     }
 }
