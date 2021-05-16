@@ -45,6 +45,14 @@ class SongParser
         self::$params = $mergeParams ? array_merge(self::$defaultParams, $params) : $params;
     }
 
+    /**
+     * @param $profileUrl string artist profile url on https://soundcloud.com/
+     * @param $params array query params to make request with. If
+     * @param $mergeParams int if true, that  if the $params array have the same string keys with default params array, then the value in this
+     * array for that key will overwrite the default. If false, default params will be removed. The current params will be applied.
+     * @return array
+     * @throws \Exception
+     */
     public static function getSongs($profileUrl, $params = [] , $mergeParams = true)
     {
         self::init($params,$mergeParams);
@@ -53,35 +61,29 @@ class SongParser
 
         $url = self::BASE_SONGS_URL . "{$artistId}/tracks";
 
-        $response = self::$httpClient->request('GET', $url, ['headers' => self::$headers, 'query' => self::$params])->getBody();;
+        $response = self::$httpClient->request('GET', $url, ['headers' => self::$headers, 'query' => self::$params]);
+        $statusCode = $response->getStatusCode();
+        if ( $statusCode == 200) {
+            $body = (string)$response->getBody();
+        } else {
+            throw new \Exception("Unexpected  response code {$statusCode} while make request to {$url}");
+        }
 
-        $data = json_decode($response, true);
+        $data = json_decode($body, true);
 
+        if(!array_key_exists('collection', $data)) {
+            throw new \Exception('Soundcloud api has been changed. This program does not work anymore :(');
+        }
         $firstPartSongsData = $data['collection'];
         $otherPartsSongsData = self::getMoreSongsData($data);
         return array_merge($firstPartSongsData, $otherPartsSongsData);
     }
 
-    public static function getArtistId($profileUrl)
-    {
-        try {
-            $res =  self::$httpClient->request('GET', $profileUrl);
-        }
-        catch (\Exception $e) {
-            echo "failure to get data from {$profileUrl}";
-        }
-
-        $response = (string)$res->getBody();
-
-        if (preg_match("/soundcloud:\/\/users:(?P<digit>\d+)/", $response, $matches)){
-            $id = $matches['digit'];
-        } else {
-            throw new \Exception("Artist id not found on {$profileUrl}");
-        }
-
-        return $id;
-    }
-
+    /**
+     * @param $songData array first part songs
+     * @return array with rest songs
+     * @throws \Exception
+     */
     private static function getMoreSongsData($songData)
     {
         $result = [];
@@ -91,22 +93,41 @@ class SongParser
             $nextParamsQuery = parse_url($nextPartUrl, PHP_URL_QUERY);
             parse_str($nextParamsQuery,$nextParams);
 
-            $nextResponse =   self::$httpClient->request('GET', $nextPartUrl,
-                [
-                    'headers' => self::$headers,
-                    'query' => array_merge(self::$params, $nextParams)
-                ]
-            );
+            $nextResponse = self::$httpClient
+                ->request('GET', $nextPartUrl, ['headers' => self::$headers, 'query' => array_merge(self::$params, $nextParams)]);
+            $statusCode = $nextResponse->getStatusCode();
+            if ($statusCode == 200) {
+                $body = (string)$nextResponse->getBody();
+            } else {
+                throw new \Exception("Unexpected  response code {$statusCode} while make request to {$nextPartUrl}");
+            }
 
-            $body = (string)$nextResponse->getBody();
             $nextData = json_decode($body, true);
 
-            if (!empty($nextData['collection'])) {
+            if (isset($nextData['collection']) && !empty($nextData['collection'])) {
                 $result[] = $nextData['collection'];
             }
 
             $data = $nextData;
         }
         return collect($result)->flatten(1)->all();
+    }
+
+    /**
+     * @param $profileUrl string artist profile url on https://soundcloud.com/
+     * @return integer artistID
+     * @throws \Exception if id not found in page
+     */
+    private static function getArtistId($profileUrl)
+    {
+        $response = (string)self::$httpClient->request('GET', $profileUrl)->getBody();
+
+        if (preg_match("/soundcloud:\/\/users:(?P<id>\d+)/", $response, $matches)){
+            $id = $matches['id'];
+        } else {
+            throw new \Exception("Artist id not found on {$profileUrl}");
+        }
+
+        return $id;
     }
 }
