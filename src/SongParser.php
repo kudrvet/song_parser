@@ -48,7 +48,6 @@ class SongParser
     public static function getSongs($profileUrl, $params = [] , $mergeParams = true)
     {
         self::init($params,$mergeParams);
-        var_dump(self::$params);
 
         $artistId = self::getArtistId($profileUrl);
 

@@ -43,7 +43,6 @@ if (empty($paramsString)) {
     $params = [];
 } else {
     $paramsData = explode(',',$paramsString);
-    var_dump($paramsData);
     $params = collect($paramsData)->flatMap(function($item) {
         [$key,$value] = explode('=',trim($item));
         return [trim($key) => trim($value)];
@@ -54,7 +53,7 @@ $mergeParams = !$args->args['--overwrite'];
 
 App::createDbConnection();
 App::loadArtistAndSongsInfo($profileUrl, $params, $mergeParams);
-echo 'Artist library has successfully loaded !';
+echo 'Artist library has successfully loaded! Check your db ;)';
 return 0;
 
 
