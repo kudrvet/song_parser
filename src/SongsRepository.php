@@ -26,7 +26,5 @@ class SongsRepository
     {
         self::init();
         Capsule::table('media_tracks')->upsert($data, ['artist_id','title'], ['reposts_count']);
-
     }
-
 }

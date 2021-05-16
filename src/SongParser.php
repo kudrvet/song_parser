@@ -5,8 +5,6 @@ use GuzzleHttp;
 class SongParser
 {
     const BASE_SONGS_URL = 'https://api-v2.soundcloud.com/users/';
-    const PARAMS_TYPE_MERGE_PARAMS = 1;
-    const PARAMS_TYPE_NEW_PARAMS = 2;
 
     private static $headers = [
         'Accept' => 'application/json, text/javascript, */*; q=0.01',
@@ -36,29 +34,21 @@ class SongParser
         'linked_partitioning' => '1'
     ];
 
-
-
     private static $params = [];
 
     private static $httpClient;
 
-    private static function init($params, $paramsFlag)
+    private static function init($params, $mergeParams)
     {
         self::$httpClient = new GuzzleHttp\Client();
 
-        $map = [
-            self::PARAMS_TYPE_MERGE_PARAMS => fn() => array_merge(self::$defaultParams, $params),
-            self::PARAMS_TYPE_NEW_PARAMS => fn() => $params
-        ];
-
-        self::$params = $map[$paramsFlag]();
+        self::$params = $mergeParams ? array_merge(self::$defaultParams, $params) : $params;
     }
 
-    public static function getSongs($profileUrl, $params , $paramsFlag)
+    public static function getSongs($profileUrl, $params = [] , $mergeParams = true)
     {
-        self::init($params,$paramsFlag);
-
-        var_dump(self::getParams());
+        self::init($params,$mergeParams);
+        var_dump(self::$params);
 
         $artistId = self::getArtistId($profileUrl);
 
@@ -120,19 +110,4 @@ class SongParser
         }
         return collect($result)->flatten(1)->all();
     }
-
-    public static function getParams()
-    {
-        return self::$params;
-    }
-
-    public static function getDefaultParams()
-    {
-        return self::$defaultParams;
-    }
-
-
-
 }
-
-

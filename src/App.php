@@ -25,17 +25,21 @@ class App
 
     /**
      * @param $profileUrl string artist profile url on https://soundcloud.com/
+     * @param $params array query params to make request with. If
+     * @param $mergeParams int if true, that  if the $params array have the same string keys with default params array, then the value in this
+     * array for that key will overwrite the default. If false, default params will be removed. The current params will be applied.
+     * @throws \Exception
      */
-    public static function loadArtistAndSongsInfo($profileUrl, $params = [], $paramsFlag = SongParser::PARAMS_TYPE_MERGE_PARAMS)
+    public static function loadArtistAndSongsInfo($profileUrl, $params = [], $mergeParams = true)
     {
-        $fullSongsData = SongParser::getSongs($profileUrl, $params, $paramsFlag);
+        $fullSongsData = SongParser::getSongs($profileUrl, $params, $mergeParams);
         if (empty($fullSongsData)) {
             echo 'Artist have no songs. Load was interrupted';
             return;
         }
 
         $fullArtistData = $fullSongsData[0]['user'] ?? null;
-        if(is_null($fullArtistData)) {
+        if (is_null($fullArtistData)) {
             throw new \Exception('soundcloud api has been changed. This program does not work anymore :(');
         }
         $artistData = collect($fullArtistData)->only(['username', 'first_name', 'full_name', 'followers_count'])->all();

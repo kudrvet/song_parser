@@ -2,13 +2,11 @@
 
 namespace App;
 
-use GuzzleHttp;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Database\Schema\Blueprint;
 
 class ArtistRepository
 {
-
     private static function init()
     {
         if (!Capsule::schema()->hasTable('media_artists')) {

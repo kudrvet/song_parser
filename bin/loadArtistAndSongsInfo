@@ -18,21 +18,24 @@ Usage:
   loadArtistLibrary (-h|--help)
   loadArtistLibrary (-v|--version)
   loadArtistLibrary (-d|--default)         
-  loadArtistLibrary  [--params=<params>] [--create] <profileUrl>
+  loadArtistLibrary  [--params=<params>] [--overwrite] <profileUrl>
 
 Options:
   -h --help                     Show this screen
   -v --version                  Show version
   -d --default                  Show default params
-  --params=<params>        Query params to make requests with.(Example:'client_id=12345,app_locale=ru,...').
-                                This params will be merged with params by default. Set --create to change this behavior. 
-                                If empty, default params will be apply. [default: ].
-  --create                      If set, default params will be replaced by optional params.
+  --params=<params>             Query params to make requests with.(Example:'client_id=12345,app_locale=ru,...').
+                                This params will be merged with params by default.
+                                If params have the same with default params, then the value for that params will overwrite params by default. 
+                                Set --overwrite to remove default params and apply only current params. 
+                                If not set, default params will be apply. [default: ].
+  --overwrite                   If set, default params will be removed. The current params will be applied.
   <profileUrl>                  artist profile url on https://soundcloud.com/
 
 DOC;
 
 $args = Docopt::handle($doc, array('version'=>'loadArtistLibrary beta'));
+
 $profileUrl = $args->args['<profileUrl>'];
 
 $paramsString = $args->args['--params'];
@@ -42,10 +45,10 @@ $params = collect($paramsData)->flatMap(function($item) {
     return [trim($key) => trim($value)];
 })->all();
 
-$paramsFlag = $args->args['--create'] ? \App\SongParser::PARAMS_TYPE_NEW_PARAMS : \App\SongParser::PARAMS_TYPE_MERGE_PARAMS;
+$mergeParams = !$args->args['--overwrite'];
 
 App::createDbConnection();
-App::loadArtistAndSongsInfo($profileUrl, $params, $paramsFlag);
+App::loadArtistAndSongsInfo($profileUrl, $params, $mergeParams);
 echo 'Artist library has successfully loaded !';
 return 0;
 
