@@ -17,20 +17,35 @@ Load artist information and songs library from soundcloud.com to database.
 Usage:
   loadArtistLibrary (-h|--help)
   loadArtistLibrary (-v|--version)
-  loadArtistLibrary  <profileUrl>
+  loadArtistLibrary  [--params <paramsQuery>] [--flag <paramsFlag>] <profileUrl>
 
 Options:
   -h --help                     Show this screen
   -v --version                  Show version
+  --params <paramsQuery>        Params [default: ]
+  --flag <paramsFlag>           ParamsFlag [default: 1]
   <profileUrl>                  artist profile url on https://soundcloud.com/
 
 DOC;
 $args = Docopt::handle($doc, array('version'=>'loadArtistLibrary beta'));
 $profileUrl = $args->args['<profileUrl>'];
+//parse_str($args->args['--params'],$params);
+$paramsFlag = $args->args['--flag'];
+//var_dump($args->args['--params']);
+$paramsString = $args->args['--params'];
+$paramsData = explode(',',$paramsString);
+//var_dump($paramsData);
 
+$params = collect($paramsData)->flatMap(function($item) {
+    [$key,$value] = explode('=',trim($item));
+    return [trim($key) => trim($value)];
+})->all();
+
+//var_dump($params);
+//var_dump($paramsFlag);
 App::createDbConnection();
-App::loadArtistAndSongsInfo($profileUrl);
-echo 'artist library loaded is ';
+App::loadArtistAndSongsInfo($profileUrl, $params, $paramsFlag);
+echo 'Artist library has successfully loaded !';
 return 0;
 
 

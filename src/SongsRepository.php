@@ -26,11 +26,10 @@ class SongsRepository
         }
     }
 
-    public static function saveSongs($data, $artistId)
+    public static function save($data)
     {
         self::init();
         Capsule::table('media_tracks')->upsert($data, ['artist_id','title'], ['reposts_count']);
-
 
     }
 

@@ -6,9 +6,9 @@ use GuzzleHttp;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Database\Schema\Blueprint;
 
-
 class ArtistRepository
 {
+
     private static function init()
     {
         if (!Capsule::schema()->hasTable('media_artists')) {
@@ -22,6 +22,11 @@ class ArtistRepository
             });
         }
     }
+
+    /**
+     * @param $data array array with Artist data like  [['field1name' => value1], ['field2name' => value2],...]
+     * @return integer|null artistId or null
+     */
     public static function saveAndGetId($data)
     {
        self::init();

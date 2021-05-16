@@ -5,7 +5,9 @@ use GuzzleHttp;
 class SongParser
 {
     const BASE_SONGS_URL = 'https://api-v2.soundcloud.com/users/';
-    const BASE_ARTIST_URL = 'https://soundcloud.com/';
+    const PARAMS_TYPE_MERGE_PARAMS = 1;
+    const PARAMS_TYPE_NEW_PARAMS = 2;
+
     private static $headers = [
         'Accept' => 'application/json, text/javascript, */*; q=0.01',
         'Accept-Encoding' => 'gzip, deflate, br',
@@ -24,7 +26,7 @@ class SongParser
         'User-Agent'=> 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
     ];
 
-    private static $params = [
+    private static $defaultParams = [
         'representation' => '',
         'offset'         => '0',
         'limit'          => '20',
@@ -34,54 +36,41 @@ class SongParser
         'linked_partitioning' => '1'
     ];
 
+
+
+    private static $params = [];
+
     private static $httpClient;
 
-    public static $clientId = '7QSdC7H3pwqDSC2QTYEj4zqhSDz8SADR';
-
-    private static function init()
+    private static function init($params, $paramsFlag)
     {
         self::$httpClient = new GuzzleHttp\Client();
+
+        $map = [
+            self::PARAMS_TYPE_MERGE_PARAMS => fn() => array_merge(self::$defaultParams, $params),
+            self::PARAMS_TYPE_NEW_PARAMS => fn() => $params
+        ];
+
+        self::$params = $map[$paramsFlag]();
     }
 
-    public static function getSongs($profileUrl)
+    public static function getSongs($profileUrl, $params , $paramsFlag)
     {
-        self::init();
+        self::init($params,$paramsFlag);
+
+        var_dump(self::getParams());
 
         $artistId = self::getArtistId($profileUrl);
 
         $url = self::BASE_SONGS_URL . "{$artistId}/tracks";
 
-        $res = self::$httpClient->request('GET', $url, ['headers' => self::$headers, 'query' => self::$params]);
-
-        $response = (string)$res->getBody();
+        $response = self::$httpClient->request('GET', $url, ['headers' => self::$headers, 'query' => self::$params])->getBody();;
 
         $data = json_decode($response, true);
 
-        $songs[] = $data['collection'];
-
-        while (isset($data['next_href'])) {
-            $nextPartUrl = $data['next_href'];
-            $nextParamsQuery = parse_url($nextPartUrl, PHP_URL_QUERY);
-            parse_str($nextParamsQuery,$nextParams);
-
-            $nextResponse =   self::$httpClient->request('GET', $nextPartUrl,
-                [
-                    'headers' => self::$headers,
-                    'query' => array_merge(self::$params, $nextParams)
-                ]);
-                $body = (string)$nextResponse->getBody();
-                $nextData = json_decode($body, true);
-
-                if (!empty($nextData['collection'])) {
-                $songs[] = $nextData['collection'];
-            }
-
-            $data = $nextData;
-        }
-
-
-        $result = self::flattenData($songs);
-        return $result;
+        $firstPartSongsData = $data['collection'];
+        $otherPartsSongsData = self::getMoreSongsData($data);
+        return array_merge($firstPartSongsData, $otherPartsSongsData);
     }
 
     public static function getArtistId($profileUrl)
@@ -104,31 +93,39 @@ class SongParser
         return $id;
     }
 
-    public static function getFirstPartData($artistId)
+    private static function getMoreSongsData($songData)
     {
+        $result = [];
+        $data = $songData;
+        while (isset($data['next_href'])) {
+            $nextPartUrl = $data['next_href'];
+            $nextParamsQuery = parse_url($nextPartUrl, PHP_URL_QUERY);
+            parse_str($nextParamsQuery,$nextParams);
 
-        $queryParams = http_build_query(self::$params);
-        $buildedUrl = self::BASE_SONGS_URL . "{$artistId}/tracks?{$queryParams}";
+            $nextResponse =   self::$httpClient->request('GET', $nextPartUrl,
+                [
+                    'headers' => self::$headers,
+                    'query' => array_merge(self::$params, $nextParams)
+                ]
+            );
 
-        $res = self::$httpClient->request('GET', $buildedUrl, ['headers' => self::$headers]);
+            $body = (string)$nextResponse->getBody();
+            $nextData = json_decode($body, true);
 
-        $response = (string)$res->getBody();
-
-        $data = json_decode($response, true);
-
-        $songs[] = $data['collection'];
-    }
-
-    private static function flattenData($data)
-    {
-        $flatten = [];
-        foreach ($data as $items) {
-            foreach ($items as $item) {
-                $flatten[] = $item;
+            if (!empty($nextData['collection'])) {
+                $result[] = $nextData['collection'];
             }
+
+            $data = $nextData;
         }
-        return $flatten;
+        return collect($result)->flatten(1)->all();
     }
+
+    public static function getParams()
+    {
+        return self::$params;
+    }
+
 }
 
 
