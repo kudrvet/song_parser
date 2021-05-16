@@ -39,11 +39,16 @@ $args = Docopt::handle($doc, array('version'=>'loadArtistLibrary beta'));
 $profileUrl = $args->args['<profileUrl>'];
 
 $paramsString = $args->args['--params'];
-$paramsData = explode(',',$paramsString);
-$params = collect($paramsData)->flatMap(function($item) {
-    [$key,$value] = explode('=',trim($item));
-    return [trim($key) => trim($value)];
-})->all();
+if (empty($paramsString)) {
+    $params = [];
+} else {
+    $paramsData = explode(',',$paramsString);
+    var_dump($paramsData);
+    $params = collect($paramsData)->flatMap(function($item) {
+        [$key,$value] = explode('=',trim($item));
+        return [trim($key) => trim($value)];
+    })->all();
+}
 
 $mergeParams = !$args->args['--overwrite'];
 
